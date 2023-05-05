@@ -1,6 +1,46 @@
 version: "3.9"
+
 services:
-  ipfs:
-    image: ipfs/testground:latest
+  ipfs-node:
+    image: ipfs/go-ipfs:latest
+    environment:
+      - IPFS_STAGING=${IPFS_STAGING:-/tmp/ipfs-docker-staging}
+      - IPFS_DATA=${IPFS_DATA:-/tmp/ipfs-docker-data}
+    volumes:
+      - ${IPFS_STAGING:-/tmp/ipfs-docker-staging}:/export
+      - ${IPFS_DATA:-/tmp/ipfs-docker-data}:/data/ipfs
     ports:
-      - "5001:5001"
+      - "8080:8080"
+      - "4001:4001"
+      - "127.0.0.1:5001:5001"
+    container_name: ipfs-node
+    restart: always
+
+  celestica:
+    image: celestica:${CELESTICA_VERSION:-latest}
+    #build: .
+    container_name: celestica
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    environment:
+      REST_PORT: 8080
+      GRPC_PORT: 50051
+      MAX_NB_CONNECTION: 16
+      MAX_ELEMENTS: 10000
+      MAX_LAYER: 16
+      EF_CONSTRUCTION: 200
+      RUST_LOG: info
+
+  grpc_cli:
+    image: celestica:${CELESTICA_VERSION:-latest}
+    #build: .
+    container_name: celestica_cli
+    environment:
+      - GRPC_PORT=50051
+      - GRPC_SERVER_HOST=celestica
+    #command: ["--grpc_cli"]
+    entrypoint: ["d_celestica", "--grpc_cli"]
+    depends_on:
+      - celestica
+

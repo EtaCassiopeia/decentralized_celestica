@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package vector_service;
+
+message FloatArray {
+  repeated float values = 1;
+}
+
+message Neighbour {
+  uint32 d_id = 1;
+  float distance = 2;
+  PointId point_id = 3;
+}
+
+message PointId {
+  uint32 layer = 1;
+  int32 index = 2;
+}
+
+message InsertRequest {
+  repeated FloatArray data = 1;
+  repeated uint32 ids = 2;
+}
+
+message SearchRequest {
+  repeated FloatArray data = 1;
+  uint32 knbn = 2;
+  uint32 ef = 3;
+}
+
+message SearchResult {
+  repeated Neighbours neighbours = 1;
+}
+
+message Neighbours {
+  repeated Neighbour neighbour = 1;
+}
+
+service VectorService {
+  rpc Insert(InsertRequest) returns (google.protobuf.Empty);
+  rpc Search(SearchRequest) returns (SearchResult);
+}

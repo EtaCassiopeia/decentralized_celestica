@@ -1,8 +1,8 @@
 use crate::hnsw_graph::node::Node;
+use parking_lot::RwLock;
 use std::sync::Arc;
-use std::sync::RwLock;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Neighbor {
     pub node: Arc<RwLock<Node>>,
     pub distance: f32,

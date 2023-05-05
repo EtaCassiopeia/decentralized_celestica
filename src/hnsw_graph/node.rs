@@ -1,15 +1,22 @@
 use crate::hnsw_graph::neighbor::Neighbor;
+#[cfg(not(test))]
+use log::{info, warn};
+use parking_lot::RwLock;
 use std::cmp::Ordering;
 use std::cmp::{Eq, Ord, PartialEq, PartialOrd};
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::RwLock;
 
-#[derive(Clone)]
+#[cfg(test)]
+use std::{println as info, println as warn};
+
+#[derive(Clone, Debug)]
 pub struct Node {
     //The cid of the image, which can also be used as the key of the node
     pub cid: String,
     pub vector: Vec<f32>,
+    //TODO consider redesigning Node and introduce the concept of layer.
+    //Instead of having the layer of the Node as a field we can have a HashMap of layers, each layer can have multiple Nodes connected to its neighbors from same layer or layers above/below.
     pub layer: i32,
     pub connections: HashMap<i32, Vec<Neighbor>>,
 }
@@ -41,6 +48,12 @@ impl Node {
         match self.connections.get_mut(&layer) {
             Some(neighbors) => {
                 if neighbors.len() < max_neighbors {
+                    info!(
+                        "Adding connection from {} to {} at layer {}",
+                        self.cid,
+                        neighbor.node.read().cid,
+                        layer
+                    );
                     neighbors.push(neighbor);
                     Ok(())
                 } else {
@@ -48,6 +61,12 @@ impl Node {
                 }
             }
             None => {
+                info!(
+                    "Adding connection from {} to {} at layer {}",
+                    self.cid,
+                    neighbor.node.read().cid,
+                    layer
+                );
                 let mut new_neighbors = Vec::with_capacity(max_neighbors);
                 new_neighbors.push(neighbor);
                 self.connections.insert(layer, new_neighbors);
@@ -65,7 +84,7 @@ impl Node {
             Some(neighbors) => {
                 if let Some(index) = neighbors
                     .iter()
-                    .position(|n| n.node.read().unwrap().cid == neighbor_cid)
+                    .position(|n| n.node.read().cid == neighbor_cid)
                 {
                     neighbors.remove(index);
                     Ok(())
@@ -100,7 +119,7 @@ impl PartialEq for Node {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ComparableNode {
     pub node: Arc<RwLock<Node>>,
     pub distance: f32,
@@ -108,7 +127,7 @@ pub struct ComparableNode {
 
 impl ComparableNode {
     pub fn new(node: Arc<RwLock<Node>>, query_vector: &[f32]) -> Self {
-        let distance = node.read().unwrap().distance(query_vector);
+        let distance = node.read().distance(query_vector);
         ComparableNode { node, distance }
     }
 }
@@ -157,7 +176,10 @@ mod tests {
 
         assert_eq!(node1.connections.len(), 1);
         assert_eq!(node1.connections.get(&0).unwrap().len(), 1);
-        assert_eq!(node1.connections.get(&0).unwrap()[0].node.read().unwrap().cid, "node2");
+        assert_eq!(
+            node1.connections.get(&0).unwrap()[0].node.read().cid,
+            "node2"
+        );
         assert_eq!(node1.connections.get(&0).unwrap()[0].distance, distance);
     }
 
@@ -177,4 +199,3 @@ mod tests {
         assert_eq!(node1.connections.get(&0).unwrap().len(), 0);
     }
 }
-
