@@ -1,0 +1,17 @@
+type HNSWGraph struct {
+  maxLayer Int
+  rootCID &Node
+  nodes {String:&Node} # HAMT Map
+}
+
+type Node struct {
+  cid String
+  layer Int
+  vector [Float]
+  neighbors [Neighbor]
+}
+
+type Neighbor struct {
+  node &Node
+  distance Float
+}
