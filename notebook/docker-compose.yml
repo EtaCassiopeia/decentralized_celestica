@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  jupyter:
+    image: jupyterlab:latest
+    ports:
+      - "8888:8888"
+    volumes:
+      - "../SDK/Python:/project/celestica"
+      - celestica-work:/project
+    command: >
+      bash -c "pip install -e /project/celestica &&
+               jupyter notebook --ip 0.0.0.0 --no-browser --allow-root"
+    environment:
+      JUPYTER_TOKEN: "celestica"
+    networks:
+      - celestica-shared-net
+
+networks:
+  celestica-shared-net:
+    external: true
+
+volumes:
+  celestica-work:
+    external: true
+

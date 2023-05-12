@@ -24,6 +24,12 @@ cd decentralized_celestica
 
 ### Docker and docker-compose
 
+Create a shared Docker network:
+
+```
+docker network create celestica-shared-net
+```
+
 This project can be built and run using Docker and docker-compose. There are two options to do this:
 
 #### Option 1: Build the image separately and use it to run the service

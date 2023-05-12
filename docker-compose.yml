@@ -15,6 +15,8 @@ services:
       - "127.0.0.1:5001:5001"
     container_name: ipfs-node
     restart: always
+    networks:
+      - celestica-shared-net
 
   celestica:
     image: celestica:${CELESTICA_VERSION:-latest}
@@ -31,6 +33,8 @@ services:
       MAX_LAYER: 16
       EF_CONSTRUCTION: 200
       RUST_LOG: info
+    networks:
+      - celestica-shared-net
 
   grpc_cli:
     image: celestica:${CELESTICA_VERSION:-latest}
@@ -43,4 +47,9 @@ services:
     entrypoint: ["d_celestica", "--grpc_cli"]
     depends_on:
       - celestica
+    networks:
+      - celestica-shared-net
 
+networks:
+  celestica-shared-net:
+    external: true
